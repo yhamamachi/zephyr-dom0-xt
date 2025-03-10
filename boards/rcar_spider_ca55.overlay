@@ -1,0 +1,102 @@
+/*
+ * Copyright (C) 2023 Renesas Electronics Corporation.
+ * Copyright (C) 2023 EPAM Systems, Inc.
+ *
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+#include <mem.h>
+
+/delete-node/ &ram;
+
+&mmc0 {
+	disk {
+		status = "okay";
+	};
+	status = "okay";
+};
+
+/ {
+	/*
+	 * This node may differs on different setups, please check
+	 * following line in Xen boot log to set it right:
+	 * (XEN) Grant table range: 0x00000078080000-0x000000780c0000
+	 * Also, add extended region 1:
+	 * (XEN) Extended region 1: 0x40000000->0x47e00000
+	 *
+	 * Xen passes actual values for setup in domain device tree, but Zephyr
+	 * is not capable to parse and handle it in runtime.
+	 */
+	hypervisor: hypervisor@78080000 {
+		compatible = "xen,xen";
+		reg = <0x0 0x78080000 0x0 0x40000 0x0 0x40000000 0x0 0x7e00000>;
+		interrupts = <GIC_PPI 0x0 IRQ_TYPE_EDGE IRQ_DEFAULT_PRIORITY>;
+		interrupt-parent = <&gic>;
+		status = "okay";
+	};
+
+	/*
+	 * This node may differs on different setups, because Xen picks
+	 * region for Domain-0 for every specific configuration. You can
+	 * start Xen for your platform and check following log:
+	 * (XEN) Allocating 1:1 mappings for dom0:
+	 * (XEN) BANK[0] 0x00000080000000-0x00000090000000 (256MB)
+	 *
+	 * Xen passes actual values for setup in domain device tree, but Zephyr
+	 * is not capable to parse and handle it in runtime.
+	 */
+	ram: memory@90000000 {
+		device_type = "mmio-sram";
+		reg = <0x00 0x90000000 0x00 DT_SIZE_M(256)>;
+	};
+
+	firmware {
+		tee {
+		compatible = "linaro,optee-tz";
+		method = "smc";
+		status = "okay";
+		};
+	};
+
+	fstab {
+		compatible = "zephyr,fstab";
+		storage: storage {
+			compatible = "zephyr,fstab,littlefs";
+			mount-point = "/tmp";
+			partition = <&storage_partition>;
+			automount;
+			read-size = <16>;
+			prog-size = <16>;
+			cache-size = <64>;
+			lookahead-size = <32>;
+			block-cycles = <512>;
+		};
+	};
+
+	flashcontroller0: flashcontroller {
+		compatible = "zephyr,sim-flash";
+		label = "FLASH_SIMULATOR";
+		#address-cells = <1>;
+		#size-cells = <1>;
+		erase-value = <0xff>;
+		flash_sim0: flash_sim@0 {
+			compatible = "soc-nv-flash";
+			reg = <0x00000000 DT_SIZE_M(32)>;
+			erase-block-size = <1024>;
+			write-block-size = <4>;
+			partitions {
+				compatible = "fixed-partitions";
+				#address-cells = <1>;
+				#size-cells = <1>;
+				/*
+				* Storage partition will be used by FCB/LittleFS/NVS
+				* if enabled.
+				*/
+				storage_partition: partition@1000 {
+					label = "storage";
+					reg = <0x00001000 0x02000000>;
+				};
+			};
+		};
+	};
+};
