@@ -54,4 +54,24 @@ __dtb_domu1_start:
 __dtb_domu1_end:
 #endif /* CONFIG_DOM_CFG_DOMU1_DTB_BIN_FILE */
 
-#endif /* CONFIG_DOM_CFG_BUILTIN_IMAGES */
+#endif /* CONFIG_DOM_CFG_BUILTIN_IMAGES */        
+
+#ifdef CONFIG_DOMD_ENABLE
+.section .data.img_ipl,"a"
+GDATA(__img_ipl_start)
+GDATA(__img_ipl_end)
+__img_ipl_start:
+.incbin CONFIG_DOMD_UBOOT_PATH
+__img_ipl_end:
+
+.section .data.dtb_ipl,"a"
+GDATA(__dtb_ipl_start)
+GDATA(__dtb_ipl_end)
+__dtb_ipl_start:
+.align 8
+.incbin CONFIG_DOMD_DTB_PATH
+__dtb_ipl_end:
+#endif /* CONFIG_DOMD_ENABLE */
+
+
+
