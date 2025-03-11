@@ -282,7 +282,7 @@ static ssize_t get_ipl_image_size(void* image_info, uint64_t* size)
 }
 
 struct xen_domain_cfg domd_cfg = {
-    .name                 = "DomD helloworld",
+    .name                 = "DomD",
     .machine_dt_compat    = (const char*[]) {"renesas,r8a779f0"},
     .nr_machine_dt_compat = 1,
     .mem_kb               = 0x100000, /* 1Gb */
