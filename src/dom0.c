@@ -38,6 +38,7 @@ int main(void)
 {
 	int ret;
 	int i = 0;
+        LOG_INF("dom0.c: main function: start");
 /*
 	ret = storage_init();
 	if (ret) {
@@ -58,5 +59,6 @@ int main(void)
 	}
 
 exit_err:
+        LOG_INF("dom0.c: main function: end");
 	return ret;
 }
