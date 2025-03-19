@@ -17,6 +17,21 @@ config DOMD_DTB_PATH
 	depends on DOMD_ENABLE
         default "\"/path/to/dtb/file\""
 
+config DOMU_ENABLE
+	bool "Enable builtin Domain-U1 kernel binary"
+	default n
+
+config DOMU_ZEPHYR_PATH
+	string "Location for Domain-U1 kernel binary"
+	depends on DOMU_ENABLE
+        default "\"/path/to/uboot/file\""
+
+config DOMU_DTB_PATH
+	string "Location for Domain-U1 device-tree"
+	depends on DOMU_ENABLE
+        default "\"/path/to/dtb/file\""
+
+
 config USE_DEFAULT_DOM_CFG
 	bool "Use default guest domain cfg"
 	default y

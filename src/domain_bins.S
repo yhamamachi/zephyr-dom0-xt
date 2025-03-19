@@ -73,5 +73,24 @@ __dtb_ipl_start:
 __dtb_ipl_end:
 #endif /* CONFIG_DOMD_ENABLE */
 
+#ifdef CONFIG_DOMU_ENABLE
+.section .data.img_domu,"a"
 
+GDATA(__img_domu_start)
+GDATA(__img_domu_end)
+
+__img_domu_start:
+.incbin CONFIG_DOMU_ZEPHYR_PATH
+__img_domu_end:
+
+.section .data.dtb_domu,"a"
+.align 8
+
+GDATA(__dtb_domu_start)
+GDATA(__dtb_domu_end)
+
+__dtb_domu_start:
+.incbin CONFIG_DOMU_DTB_PATH
+__dtb_domu_end:
+#endif /* CONFIG_DOMU_ENABLE */
 

@@ -24,21 +24,31 @@ cd ${ZEPHYR_SDK_PATH}
 
 mkdir -p $WORK_DIR
 cd $WORK_DIR
-#BOARD=rpi_5
-#BOARD=rcar_spider_s4/r8a779f0/a55
 BOARD=rcar_spider_ca55
-#west init -o--depth=1 -m https://github.com/yhamamachi/zephyr-dom0-xt.git --mr rcars4_dev
-west init -l ../
+west init -o--depth=1 -m https://github.com/yhamamachi/zephyr-dom0-xt.git --mr rcars4_dev
 west update -n
-#west build -b ${BOARD} -p always  -S xen_dom0 zephyr/samples/hello_world/
-#west build -b ${BOARD} -p always  -S xen_dom0 zephyr-dom0-xt
 
-CONFIG_DOMD_UBOOT_PATH="/work/github/meta-aos-rcar-gen4/work/yocto/build-domd/tmp/deploy/images/spider/u-boot-domd.bin"
-CONFIG_DOMD_DTB_PATH="/work/github/meta-aos-rcar-gen4/work/yocto/build-domd/tmp/deploy/images/spider/r8a779f0-spider-domd.dtb"
+# Fix build error using xenvm_gicv3
+sed -i zephyr/drivers/xen/regions.c -e "s/> EXTENDED_REGIONS_IDX/>= EXTENDED_REGIONS_IDX/"
+
+# Build DomU Zephyr(w/o hardware/device driver domain)
+west build -b xenvm_gicv3 -p always zephyr/samples/synchronization
+cp -f build/zephyr/zephyr.bin ./zephyr_sync.bin
+dtc -I dts -O dtb build/zephyr/zephyr.dts -o ./zephyr_sync.dtb
+CONFIG_DOMU_ZEPHYR_PATH="$WORK_DIR/zephyr_sync.bin"
+CONFIG_DOMU_DTB_PATH="$WORK_DIR/zephyr_sync.dtb"
+
+#west build -b xenvm_gicv3 -p always zephyr/samples/hello_world/ 
+#cp -f build/zephyr/zephyr.bin ./zephyr_hello.bin
+#dtc -I dts -O dtb build/zephyr/zephyr.dts -o ./zephyr_hello.dtb
+#CONFIG_DOMU_ZEPHYR_PATH="$WORK_DIR/zephyr_hello.bin"
+#CONFIG_DOMU_DTB_PATH="$WORK_DIR/zephyr_hello.dtb"
+
 west build -b ${BOARD} -p always  -S xen_dom0 ../ -- \
-    -DCONFIG_DOMD_ENABLE=y \
-    -DCONFIG_DOMD_UBOOT_PATH=\"$CONFIG_DOMD_UBOOT_PATH\" \
-    -DCONFIG_DOMD_DTB_PATH=\"$CONFIG_DOMD_DTB_PATH\" \
+    -DCONFIG_DOM_CFG_BOARD_EXT=\"domu\" \
+    -DCONFIG_DOMU_ENABLE=y \
+    -DCONFIG_DOMU_ZEPHYR_PATH=\"$CONFIG_DOMU_ZEPHYR_PATH\" \
+    -DCONFIG_DOMU_DTB_PATH=\"$CONFIG_DOMU_DTB_PATH\" \
 
 cp -f build/zephyr/zephyr.bin /tftp
 

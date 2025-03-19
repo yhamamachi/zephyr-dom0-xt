@@ -13,6 +13,12 @@ LOG_MODULE_REGISTER(dom0);
 #include "dom0.h"
 
 extern struct dom0_domain_cfg domain_cfgs[];
+#ifdef CONFIG_DOMD_ENABLE
+extern struct xen_domain_cfg domd_cfg;
+#endif
+#ifdef CONFIG_DOMU_ENABLE
+extern struct xen_domain_cfg domu_cfg;
+#endif
 
 int domain_get_user_cfg_count(void)
 {
@@ -57,7 +63,12 @@ int main(void)
 		domain_cfgs[i].domain_cfg->image_info = &domain_cfgs[i];
 		i++;
 	}
-
+#ifdef CONFIG_DOMD_ENABLE
+        domain_create(&domd_cfg, 1);
+#endif
+#ifdef CONFIG_DOMU_ENABLE
+        domain_create(&domu_cfg, 1);
+#endif
 exit_err:
         LOG_INF("dom0.c: main function: end");
 	return ret;

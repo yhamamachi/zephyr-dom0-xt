@@ -1,0 +1,68 @@
+#!/bin/bash
+
+SCRIPT_DIR=$(cd `dirname $0` && pwd)
+ZEPHYR_VERSION=0.16.0
+ZEPHYR_SDK_PATH=${SCRIPT_DIR}/zephyr-sdk-${ZEPHYR_VERSION}
+WORK_DIR=$SCRIPT_DIR/work
+
+# Setup SDK
+cd ${SCRIPT_DIR}
+if [ ! -e "${ZEPHYR_SDK_PATH}" ]; then
+    # Minimal SDK
+    wget -c https://github.com/zephyrproject-rtos/sdk-ng/releases/download/v${ZEPHYR_VERSION}/zephyr-sdk-${ZEPHYR_VERSION}_linux-x86_64_minimal.tar.xz
+    tar xf zephyr-sdk-${ZEPHYR_VERSION}_linux-x86_64_minimal.tar.xz
+    # toolchain(arm)
+    # wget -c https://github.com/zephyrproject-rtos/sdk-ng/releases/download/v${ZEPHYR_VERSION}/toolchain_linux-x86_64_arm-zephyr-eabi.tar.xz
+    # tar xf toolchain_linux-x86_64_arm-zephyr-eabi.tar.xz -C zephyr-sdk-${ZEPHYR_VERSION}
+    # toolchain(aarch64)
+    wget -c https://github.com/zephyrproject-rtos/sdk-ng/releases/download/v${ZEPHYR_VERSION}/toolchain_linux-x86_64_aarch64-zephyr-elf.tar.xz
+    tar xf toolchain_linux-x86_64_aarch64-zephyr-elf.tar.xz -C zephyr-sdk-${ZEPHYR_VERSION}
+fi
+
+cd ${ZEPHYR_SDK_PATH}
+./setup.sh -c
+
+mkdir -p $WORK_DIR
+cd $WORK_DIR
+BOARD=rcar_spider_ca55
+west init -o--depth=1 -m https://github.com/yhamamachi/zephyr-dom0-xt.git --mr rcars4_dev
+west update -n
+
+# Fix build error using xenvm_gicv3
+sed -i zephyr/drivers/xen/regions.c -e "s/> EXTENDED_REGIONS_IDX/>= EXTENDED_REGIONS_IDX/"
+
+CONFIG_DOMD_UBOOT_PATH="/work/github/meta-aos-rcar-gen4/work/yocto/build-domd/tmp/deploy/images/spider/u-boot-domd.bin"
+CONFIG_DOMD_UBOOT_PATH="/work/xen_build/spider-1.3.2-4.19/build/yocto/build-domd/tmp/deploy/images/spider/Image"
+CONFIG_DOMD_DTB_PATH="/work/github/meta-aos-rcar-gen4/work/yocto/build-domd/tmp/deploy/images/spider/r8a779f0-spider-domd.dtb"
+#CONFIG_DOMD_DTB_PATH="/work/xen_build/spider-1.3.2-4.19/build/yocto/build-domd/tmp/deploy/images/spider/r8a779f0-spider-domd.dtb"
+
+# DomD U-boot
+git clone https://github.com/xen-troops/u-boot -b zephyr_ipl_dev $WORK_DIR/u-boot
+cd $WORK_DIR/u-boot
+sed -i configs/rcar3_spider-xen_defconfig -e "s/r8a779f0-spider-xen-u-boot/r8a779f0-spider-u-boot/"
+#ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- make rcar3_spider-xen_defconfig all -j$(nproc)
+ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- make rcar3_salvator-x-xen_defconfig all -j$(nproc)
+CONFIG_DOMD_UBOOT_PATH="${WORK_DIR}/u-boot/u-boot-nodtb.bin"
+CONFIG_DOMD_UBOOT_PATH="${WORK_DIR}/u-boot/u-boot.bin"
+cd $WORK_DIR
+
+ls $CONFIG_DOMD_UBOOT_PATH
+ls $CONFIG_DOMD_DTB_PATH
+
+# Xen-4.20 has XEN_DOMCTL_INTERFACE_VERSION=0x00000018, but Kconfig range is 0x15 to 0x17
+sed -i ${WORK_DIR}/zephyr/arch/arm64/core/xen/Kconfig -e 's/0x17/0x18/'
+
+# Support Xen old version
+sed -i ${WORK_DIR}/zephyr/drivers/xen/dom0/domctl.c
+    -e "s/CONFIG_XEN_DOMCTL_INTERFACE_VERSION >= 0x00000016/CONFIG_XEN_DOMCTL_INTERFACE_VERSION >= 0x00000015/"
+sed -i ${WORK_DIR}/zephyr/include/zephyr/xen/public/domctl.h
+    -e "s/CONFIG_XEN_DOMCTL_INTERFACE_VERSION >= 0x00000016/CONFIG_XEN_DOMCTL_INTERFACE_VERSION >= 0x00000015/"
+
+west build -b ${BOARD} -p always  -S xen_dom0 ../ -- \
+    -DCONFIG_DOM_CFG_BOARD_EXT=\"domd\" \
+    -DCONFIG_DOMD_ENABLE=y \
+    -DCONFIG_DOMD_UBOOT_PATH=\"$CONFIG_DOMD_UBOOT_PATH\" \
+    -DCONFIG_DOMD_DTB_PATH=\"$CONFIG_DOMD_DTB_PATH\" \
+
+cp -f build/zephyr/zephyr.bin /tftp/zephyr_domd.bin
+
