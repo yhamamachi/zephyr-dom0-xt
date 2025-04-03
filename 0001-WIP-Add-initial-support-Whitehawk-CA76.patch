@@ -1,4 +1,4 @@
-From 1ca3291e717165051df66d71b54c5855b65222cb Mon Sep 17 00:00:00 2001
+From 18c578896b5cbfb046f71023eda4fb3bd6e34949 Mon Sep 17 00:00:00 2001
 From: Yuya Hamamachi <yuya.hamamachi.sx@renesas.com>
 Date: Wed, 2 Apr 2025 15:12:26 +0900
 Subject: [PATCH] WIP: Add initial support Whitehawk CA76
@@ -7,18 +7,18 @@ Signed-off-by: Yuya Hamamachi <yuya.hamamachi.sx@renesas.com>
 ---
  .../arm64/rcar_whitehawk_ca76/Kconfig.board   |  6 ++
  .../rcar_whitehawk_ca76/Kconfig.defconfig     | 13 ++++
- .../arm64/rcar_whitehawk_ca76/doc/index.rst   | 57 ++++++++++++++++++
- .../rcar_whitehawk_ca76.dts                   | 56 +++++++++++++++++
+ .../arm64/rcar_whitehawk_ca76/doc/index.rst   | 57 +++++++++++++++++
+ .../rcar_whitehawk_ca76.dts                   | 61 +++++++++++++++++++
  .../rcar_whitehawk_ca76.yaml                  | 18 ++++++
  .../rcar_whitehawk_ca76_defconfig             | 23 +++++++
- .../whitehawk-pinctrl.dtsi                    | 60 +++++++++++++++++++
+ .../whitehawk-pinctrl.dtsi                    | 60 ++++++++++++++++++
  drivers/pinctrl/renesas/rcar/CMakeLists.txt   |  1 +
  .../boards/rcar_whitehawk_ca76.overlay        |  7 +++
  snippets/xen_dom0/snippet.yml                 |  3 +
  .../gen4/Kconfig.defconfig.r8a779g0           |  9 +++
  soc/arm64/renesas_rcar/gen4/Kconfig.series    |  1 -
  soc/arm64/renesas_rcar/gen4/Kconfig.soc       |  5 ++
- 13 files changed, 258 insertions(+), 1 deletion(-)
+ 13 files changed, 263 insertions(+), 1 deletion(-)
  create mode 100644 boards/arm64/rcar_whitehawk_ca76/Kconfig.board
  create mode 100644 boards/arm64/rcar_whitehawk_ca76/Kconfig.defconfig
  create mode 100644 boards/arm64/rcar_whitehawk_ca76/doc/index.rst
@@ -125,10 +125,10 @@ index 0000000000..f215d0f827
 +
 diff --git a/boards/arm64/rcar_whitehawk_ca76/rcar_whitehawk_ca76.dts b/boards/arm64/rcar_whitehawk_ca76/rcar_whitehawk_ca76.dts
 new file mode 100644
-index 0000000000..93c5588464
+index 0000000000..5bd79fe4ea
 --- /dev/null
 +++ b/boards/arm64/rcar_whitehawk_ca76/rcar_whitehawk_ca76.dts
-@@ -0,0 +1,56 @@
+@@ -0,0 +1,61 @@
 +/*
 + * Copyright (c) 2023 EPAM Systems
 + *
@@ -157,6 +157,11 @@ index 0000000000..93c5588464
 +	ram: memory@48000000 {
 +		device_type = "mmio-sram";
 +		reg = <0x0 0x48000000 0x0 DT_SIZE_M(512)>;
++	};
++	cpus {
++		a76: cpu@0 {
++			compatible = "arm,cortex-a76";
++		};
 +	};
 +};
 +
