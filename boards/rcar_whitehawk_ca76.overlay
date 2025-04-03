@@ -9,12 +9,12 @@
 
 /delete-node/ &ram;
 
-&mmc0 {
-	disk {
-		status = "okay";
-	};
-	status = "okay";
-};
+// &mmc0 {
+// 	disk {
+// 		status = "okay";
+// 	};
+// 	status = "okay";
+// };
 
 / {
 	/*
