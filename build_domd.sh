@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -eu
 
 BOARD_LIST=("spider" "whitehawk")
 BOARD="dummy"
@@ -46,24 +46,46 @@ cd ${ZEPHYR_SDK_PATH}
 
 mkdir -p $WORK_DIR
 cd $WORK_DIR
-west init -o--depth=1 -m https://github.com/yhamamachi/zephyr-dom0-xt.git --mr rcars4_dev
+west init -o--depth=1 -m https://github.com/yhamamachi/zephyr-dom0-xt.git --mr rcars4_dev || true
 west update -n
 
 # Applt whitehawk support patch
 git -C $WORK_DIR/zephyr am $SCRIPT_DIR/0001-WIP-Add-initial-support-Whitehawk-CA76.patch
+#git -C $WORK_DIR/zephyr am $SCRIPT_DIR/0001-WIP-debug.patch
 # Fix build error using xenvm_gicv3
 sed -i zephyr/drivers/xen/regions.c -e "s/> EXTENDED_REGIONS_IDX/>= EXTENDED_REGIONS_IDX/"
 
 #CONFIG_DOMD_DTB_PATH="/work/xen_build/spider-1.3.2-4.19/build/yocto/build-domd/tmp/deploy/images/spider/r8a779f0-spider-domd.dtb"
 
 # DomD U-boot
-git clone https://github.com/xen-troops/u-boot -b zephyr_ipl_dev $WORK_DIR/u-boot
+#git clone https://github.com/xen-troops/u-boot -b zephyr_ipl_dev $WORK_DIR/u-boot
+#DEFCONFIG=rcar3_spider-xen_defconfig
+git clone https://github.com/xen-troops/u-boot -b zephyr_rcar_ipl_v2023.10 $WORK_DIR/u-boot || true
+DEFCONFIG=rcar4_xen_defconfig
+
 cd $WORK_DIR/u-boot
-sed -i configs/rcar3_spider-xen_defconfig -e "s/r8a779f0-spider-xen-u-boot/r8a779f0-spider-u-boot/"
-#ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- make rcar3_spider-xen_defconfig all -j$(nproc)
-ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- make rcar3_salvator-x-xen_defconfig all -j$(nproc)
-CONFIG_DOMD_UBOOT_PATH="${WORK_DIR}/u-boot/u-boot-nodtb.bin"
+git reset --hard
+BOOTCOMMAND="load mmc 0:2 0x44001000 /boot/Image; booti 0x44001000 - 0x48000000"
+sed -i -e "s|CONFIG_BOOTCOMMAND=.*|CONFIG_BOOTCOMMAND=\"${BOOTCOMMAND}\"|" configs/${DEFCONFIG}
+sed -i -e "/UFS/d" -e "/PHY/d" -e "/USB/d" -e "/ETHER_SWITCH/d" configs/${DEFCONFIG}
+sed -i -e "s/r8a779f0-spider-u-boot/r8a779g0-white-hawk-u-boot/" configs/${DEFCONFIG}
+#sed -i -e "/CONFIG_CLK_RENESAS=y/d" -e "/RCAR_GPIO/d" configs/${DEFCONFIG}
+sed -i -e "s/HS400_SUPPORT/HS200_SUPPORT/" configs/${DEFCONFIG}
+cat << EOS >> configs/${DEFCONFIG}
+CONFIG_BOOTDELAY=0
+CONFIG_MMC_IO_VOLTAGE=y
+CONFIG_BOOTARGS="root=/dev/mmcblk0p2 rw rootwait console=hvc0 clk_ignore_unused
+CONFIG_VERBOSE_DEBUG=y
+CONFIG_SERIAL_XEN=y
+CONFIG_SYS_MMC_ENV_PART=2
+EOS
+
+sed -i -e "s/imply R8A779F0/imply R8A779G0/" arch/arm/mach-rmobile/Kconfig.rcar4
+sed -i -e "s/select GICV3$/select GICV3 if !RCAR_XEN/" arch/arm/mach-rmobile/Kconfig.rcar4
+
+ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- make ${DEFCONFIG} all -j$(nproc)
 CONFIG_DOMD_UBOOT_PATH="${WORK_DIR}/u-boot/u-boot.bin"
+
 cd $WORK_DIR
 
 ls $CONFIG_DOMD_UBOOT_PATH
@@ -73,10 +95,10 @@ ls $CONFIG_DOMD_DTB_PATH
 sed -i ${WORK_DIR}/zephyr/arch/arm64/core/xen/Kconfig -e 's/0x17/0x18/'
 
 # Support Xen old version
-sed -i ${WORK_DIR}/zephyr/drivers/xen/dom0/domctl.c
-    -e "s/CONFIG_XEN_DOMCTL_INTERFACE_VERSION >= 0x00000016/CONFIG_XEN_DOMCTL_INTERFACE_VERSION >= 0x00000015/"
-sed -i ${WORK_DIR}/zephyr/include/zephyr/xen/public/domctl.h
-    -e "s/CONFIG_XEN_DOMCTL_INTERFACE_VERSION >= 0x00000016/CONFIG_XEN_DOMCTL_INTERFACE_VERSION >= 0x00000015/"
+#sed -i ${WORK_DIR}/zephyr/drivers/xen/dom0/domctl.c \
+#    -e "s/CONFIG_XEN_DOMCTL_INTERFACE_VERSION >= 0x00000016/CONFIG_XEN_DOMCTL_INTERFACE_VERSION >= 0x00000015/"
+#sed -i ${WORK_DIR}/zephyr/include/zephyr/xen/public/domctl.h \
+#    -e "s/CONFIG_XEN_DOMCTL_INTERFACE_VERSION >= 0x00000016/CONFIG_XEN_DOMCTL_INTERFACE_VERSION >= 0x00000015/"
 
 west build -b ${BOARD} -p always  -S xen_dom0 ../ -- \
     -DCONFIG_DOM_CFG_BOARD_EXT=\"domd\" \

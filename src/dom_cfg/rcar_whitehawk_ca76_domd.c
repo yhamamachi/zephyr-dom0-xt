@@ -67,7 +67,7 @@ static struct xen_domain_iomem domd_iomems[] = {
     {.first_mfn = 0xe6800, .nr_mfns = 0x1},
     {.first_mfn = 0xe6810, .nr_mfns = 0x1},
     {.first_mfn = 0xe6820, .nr_mfns = 0x1},
-    {.first_mfn = 0xe6860, .nr_mfns = 0x7},
+    {.first_mfn = 0xe6460, .nr_mfns = 0x7},
     {.first_mfn = 0xe6449, .nr_mfns = 0x1},
     {.first_mfn = 0xe6061, .nr_mfns = 0x1},
     {.first_mfn = 0xe65d0, .nr_mfns = 0x3},
@@ -216,6 +216,7 @@ static ssize_t get_ipl_image_size(void* image_info, uint64_t* size)
 
 struct xen_domain_cfg domd_cfg = {
     .name                 = "DomD",
+    //.machine_dt_compat    = (const char*[]) {"renesas,r8a779g0", "renesas,whitehawk-cpu"},
     .machine_dt_compat    = (const char*[]) {"renesas,r8a779g0"},
     .nr_machine_dt_compat = 1,
     .mem_kb               = 0x100000, /* 1Gb */
@@ -243,11 +244,7 @@ struct xen_domain_cfg domd_cfg = {
     .load_image_bytes  = load_ipl_image,
     .get_image_size    = get_ipl_image_size,
     .image_info        = NULL,
-    .cmdline
-    = "root=/dev/sda4 ro rootwait console=hvc0 clk_ignore_unused pci=pcie_bus_perf "
-      "cgroup_no_v1=all systemd.unified_cgroup_hierarchy=1 "
-      "vardir.disk=/dev/sda5 opendisk.target=/dev/sda6 opendisk.pkcs11=optee aosupdate.disk=/dev/aosvg/workdirs "
-      "aosupdate.path=um/update_rootfs aosupdate.selinux_module=/usr/share/selinux/aos/base.pp",
+    //.cmdline           = "root=/dev/mmcblk0p2 rw rootwait",
     .dtb_start = __dtb_ipl_start,
     .dtb_end   = __dtb_ipl_end,
 };
