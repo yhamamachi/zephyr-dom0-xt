@@ -40,55 +40,42 @@ if [ ! -e "${ZEPHYR_SDK_PATH}" ]; then
     wget -c https://github.com/zephyrproject-rtos/sdk-ng/releases/download/v${ZEPHYR_VERSION}/toolchain_linux-x86_64_aarch64-zephyr-elf.tar.xz
     tar xf toolchain_linux-x86_64_aarch64-zephyr-elf.tar.xz -C zephyr-sdk-${ZEPHYR_VERSION}
 fi
-
 cd ${ZEPHYR_SDK_PATH}
 ./setup.sh -c
 
 mkdir -p $WORK_DIR
+cd $WORK_DIR
+
+# DomD U-boot
+git clone https://github.com/xen-troops/u-boot -b zephyr_rcar_ipl_v2023.10 $WORK_DIR/u-boot || true
+DEFCONFIG=rcar4_xen_defconfig
+
+cd $WORK_DIR/u-boot
+git reset --hard origin/zephyr_rcar_ipl_v2023.10; git clean -dffx
+git -C $WORK_DIR/u-boot am $SCRIPT_DIR/0001-WIP-xen-rcar-gen4-Add-support-whitehawk.patch
+
+BOOTCOMMAND="load mmc 0:2 0x44001000 /boot/Image; booti 0x44001000 - 0x48000000"
+sed -i -e "s|CONFIG_BOOTCOMMAND=.*|CONFIG_BOOTCOMMAND=\"${BOOTCOMMAND}\"|" configs/${DEFCONFIG}
+#sed -i -e "s/HS400_SUPPORT/HS200_SUPPORT/" configs/${DEFCONFIG}
+cat << EOS >> configs/${DEFCONFIG}
+CONFIG_BOOTDELAY=0
+EOS
+
+ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- make ${DEFCONFIG} all -j$(nproc)
+CONFIG_DOMD_UBOOT_PATH="${WORK_DIR}/u-boot/u-boot.bin"
+
+ls $CONFIG_DOMD_UBOOT_PATH
+ls $CONFIG_DOMD_DTB_PATH
+
+# Dom0 Zephyr
 cd $WORK_DIR
 west init -o--depth=1 -m https://github.com/yhamamachi/zephyr-dom0-xt.git --mr rcars4_dev || true
 west update -n
 
 # Applt whitehawk support patch
 git -C $WORK_DIR/zephyr am $SCRIPT_DIR/0001-WIP-Add-initial-support-Whitehawk-CA76.patch
-#git -C $WORK_DIR/zephyr am $SCRIPT_DIR/0001-WIP-debug.patch
 # Fix build error using xenvm_gicv3
 sed -i zephyr/drivers/xen/regions.c -e "s/> EXTENDED_REGIONS_IDX/>= EXTENDED_REGIONS_IDX/"
-
-#CONFIG_DOMD_DTB_PATH="/work/xen_build/spider-1.3.2-4.19/build/yocto/build-domd/tmp/deploy/images/spider/r8a779f0-spider-domd.dtb"
-
-# DomD U-boot
-#git clone https://github.com/xen-troops/u-boot -b zephyr_ipl_dev $WORK_DIR/u-boot
-#DEFCONFIG=rcar3_spider-xen_defconfig
-git clone https://github.com/xen-troops/u-boot -b zephyr_rcar_ipl_v2023.10 $WORK_DIR/u-boot || true
-DEFCONFIG=rcar4_xen_defconfig
-
-cd $WORK_DIR/u-boot
-git reset --hard
-BOOTCOMMAND="load mmc 0:2 0x44001000 /boot/Image; booti 0x44001000 - 0x48000000"
-sed -i -e "s|CONFIG_BOOTCOMMAND=.*|CONFIG_BOOTCOMMAND=\"${BOOTCOMMAND}\"|" configs/${DEFCONFIG}
-sed -i -e "/UFS/d" -e "/PHY/d" -e "/USB/d" -e "/ETHER_SWITCH/d" configs/${DEFCONFIG}
-sed -i -e "s/r8a779f0-spider-u-boot/r8a779g0-white-hawk-u-boot/" configs/${DEFCONFIG}
-#sed -i -e "/CONFIG_CLK_RENESAS=y/d" -e "/RCAR_GPIO/d" configs/${DEFCONFIG}
-sed -i -e "s/HS400_SUPPORT/HS200_SUPPORT/" configs/${DEFCONFIG}
-cat << EOS >> configs/${DEFCONFIG}
-CONFIG_BOOTDELAY=0
-CONFIG_MMC_IO_VOLTAGE=y
-CONFIG_VERBOSE_DEBUG=y
-CONFIG_SERIAL_XEN=y
-CONFIG_SYS_MMC_ENV_PART=2
-EOS
-
-sed -i -e "s/imply R8A779F0/imply R8A779G0/" arch/arm/mach-rmobile/Kconfig.rcar4
-sed -i -e "s/select GICV3$/select GICV3 if !RCAR_XEN/" arch/arm/mach-rmobile/Kconfig.rcar4
-
-ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- make ${DEFCONFIG} all -j$(nproc)
-CONFIG_DOMD_UBOOT_PATH="${WORK_DIR}/u-boot/u-boot.bin"
-
-cd $WORK_DIR
-
-ls $CONFIG_DOMD_UBOOT_PATH
-ls $CONFIG_DOMD_DTB_PATH
 
 # Xen-4.20 has XEN_DOMCTL_INTERFACE_VERSION=0x00000018, but Kconfig range is 0x15 to 0x17
 sed -i ${WORK_DIR}/zephyr/arch/arm64/core/xen/Kconfig -e 's/0x17/0x18/'
