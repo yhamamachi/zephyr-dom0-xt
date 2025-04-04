@@ -17,7 +17,7 @@ Usage () {
 for arg in $@; do
     if [[ "${arg}" == "spider" ]]; then
         BOARD="rcar_spider_ca55"
-        CONFIG_DOMD_DTB_PATH="/work/github/meta-aos-rcar-gen4/work/yocto/build-domd/tmp/deploy/images/spider/r8a779f0-spider-domd.dtb"
+        CONFIG_DOMD_DTB_PATH="/work/xen_build/spider-1.3.2-4.19/build_xen419/yocto/build-domd/tmp/deploy/images/spider/r8a779f0-spider-domd.dtb"
     elif [[ "${arg}" == "whitehawk" ]]; then
         BOARD="rcar_whitehawk_ca76"
         CONFIG_DOMD_DTB_PATH="/work/v4h_xen/build/yocto/build-domd/tmp/deploy/images/whitehawk/r8a779g0-whitehawk-domd.dtb"
