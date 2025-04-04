@@ -5,10 +5,10 @@ Original Readme: [README.rst](./README.rst)
 ## Status
 
 - Dom0 + DomU Zephyr + Xen-4.19: OK
-  - build.sh
-- Dom0 + DomD Linux + Xen-4.19; Not work
-  - build_domd.sh(WIP)
-    - DomD U-Boot doesn't boot correctly(a lot of trap logs are shown in console).
+  - `build.sh <board_name>`
+- Dom0 + DomD Linux + Xen-4.19; Maybe OK
+  - `build_domd.sh <board_name>`
+    - Login shell and ping works at least.
 - Dom0 + DomD Zephyr + Xen-4.19: Not started to development
 
 ## How to build environment(Dom0 + DomU Zephyr)
@@ -19,11 +19,17 @@ Original Readme: [README.rst](./README.rst)
 # By default, build script copy the binary to /tftp
 ```
 
-## How to boot
+## How to build environment(Dom0 + DomD Linux)
 
-### Using tftp and eMMC
+```
+# Please edit CONFIG_DOMD_DTB_PATH in build_domd.sh before building
+# DomD linux requires Devicetree which is built with Xen BSP.
+./build_domd.sh <board_name>
+# work/build/zephyr/zephyr.bin is generated.
+# By default, build script copy the binary to /tftp
+```
 
-#### Build Xen-4.19 envrionment
+## Build Xen-4.19 envrionment
 
 <details>
 <summary>For S4 Spider</summary>
@@ -138,6 +144,10 @@ ninja boot_artifacts
 
 </details>
 
+## How to boot
+
+### Using tftp and eMMC
+
 #### U-Boot env setup
 
 <details>
@@ -208,11 +218,5 @@ I: dom0.c: main function: end
 
 uart:~$
 ```
-
-### Using eMMC only
-
-#### How to build
-
-T.B.D.
 
 
