@@ -92,5 +92,5 @@ west build -b ${BOARD} -p always  -S xen_dom0 ../ -- \
     -DCONFIG_DOMD_UBOOT_PATH=\"$CONFIG_DOMD_UBOOT_PATH\" \
     -DCONFIG_DOMD_DTB_PATH=\"$CONFIG_DOMD_DTB_PATH\" \
 
-cp -f build/zephyr/zephyr.bin /tftp/zephyr_domd.bin
+cp -f build/zephyr/zephyr.bin /tftp/zephyr.bin
 
