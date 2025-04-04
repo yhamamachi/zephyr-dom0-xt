@@ -127,7 +127,7 @@ do_compile:prepend() {
     sed -i ${S}/arch/arm64/boot/dts/renesas/r8a779g0-whitehawk.dts \
         -e "/linux,cr_region@60000000/,+3d"
     sed -i ${S}/arch/arm64/boot/dts/renesas/r8a779g0-domd.dts \
-        -e "/cr_region/d"
+        -e "/cr_region/d" -e "/linux,cma@80000000/,+6d"
 }
 EOS
 

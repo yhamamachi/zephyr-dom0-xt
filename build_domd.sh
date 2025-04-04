@@ -74,7 +74,6 @@ sed -i -e "s/HS400_SUPPORT/HS200_SUPPORT/" configs/${DEFCONFIG}
 cat << EOS >> configs/${DEFCONFIG}
 CONFIG_BOOTDELAY=0
 CONFIG_MMC_IO_VOLTAGE=y
-CONFIG_BOOTARGS="root=/dev/mmcblk0p2 rw rootwait console=hvc0 clk_ignore_unused
 CONFIG_VERBOSE_DEBUG=y
 CONFIG_SERIAL_XEN=y
 CONFIG_SYS_MMC_ENV_PART=2

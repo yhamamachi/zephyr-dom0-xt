@@ -219,7 +219,7 @@ struct xen_domain_cfg domd_cfg = {
     //.machine_dt_compat    = (const char*[]) {"renesas,r8a779g0", "renesas,whitehawk-cpu"},
     .machine_dt_compat    = (const char*[]) {"renesas,r8a779g0"},
     .nr_machine_dt_compat = 1,
-    .mem_kb               = 0x100000, /* 1Gb */
+    .mem_kb               = 0x200000, /* 2Gb */
 
     .flags               = (XEN_DOMCTL_CDF_hvm | XEN_DOMCTL_CDF_hap | XEN_DOMCTL_CDF_iommu),
     .max_evtchns         = 10,
@@ -244,7 +244,7 @@ struct xen_domain_cfg domd_cfg = {
     .load_image_bytes  = load_ipl_image,
     .get_image_size    = get_ipl_image_size,
     .image_info        = NULL,
-    //.cmdline           = "root=/dev/mmcblk0p2 rw rootwait",
+    .cmdline           = "root=/dev/mmcblk0p2 rw rootwait console=hvc0 clk_ignore_unused cma=1024M",
     .dtb_start = __dtb_ipl_start,
     .dtb_end   = __dtb_ipl_end,
 };
