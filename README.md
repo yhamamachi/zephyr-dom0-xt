@@ -75,23 +75,24 @@ gzip -f full.img
 
 YAML_FILE=https://raw.githubusercontent.com/xen-troops/meta-xt-prod-devel-rcar-gen4/refs/heads/v4h_demo/prod-devel-rcar4.yaml
 SCRIPT_DIR=$(cd `dirname $0` && pwd)
-cd ${SCRIPT_DIR}
+mkdir -p ${SCRIPT_DIR}/build
 
-mkdir -p build && cd build
+# GFX package
+GFX_DRV="https://github.com/renesas-rcar/rcar-gfx/raw/refs/heads/V4Hx/v1.3.1-2/gfxdrv/GSX_KM_V4H.tar.bz2"
+GFX_LIB="https://github.com/renesas-rcar/rcar-gfx/raw/refs/heads/V4Hx/v1.3.1-2/opengl/r8a779g0_linux_gsx_binaries_gles.tar.bz2"
+mkdir -p ${SCRIPT_DIR}/prop; cd ${SCRIPT_DIR}/prop
+wget -c ${GFX_DRV}
+wget -c ${GFX_LIB}
+cp -f ./GSX_KM_V4H.tar.bz2 ${SCRIPT_DIR}/build/GSX_KM_V4H_DDK23.3_v2.tar.bz2
+cp -f ./r8a779g0_linux_gsx_binaries_gles.tar.bz2 ${SCRIPT_DIR}/build/r8a779g0_linux_gsx_binaries_gles_vz_DDK23.3_v2.tar.bz2
+
+cd ${SCRIPT_DIR}/build
 curl -LO https://raw.github.com/xen-troops/meta-xt-prod-devel-rcar-gen4/v4h_demo/prod-devel-rcar4.yaml
 sed -i -e "s/4.17.0+git%/4.19.0+git%/" prod-devel-rcar4.yaml
 
 moulin prod-devel-rcar4.yaml \
     --MACHINE whitehawk \
     --ENABLE_DOMU yes \
-
-# GFX package
-GFX_DRV="https://github.com/renesas-rcar/rcar-gfx/raw/refs/heads/V4Hx/v1.3.1-2/gfxdrv/GSX_KM_V4H.tar.bz2"
-GFX_LIB="https://github.com/renesas-rcar/rcar-gfx/raw/refs/heads/V4Hx/v1.3.1-2/opengl/r8a779g0_linux_gsx_binaries_gles.tar.bz2"
-mkdir ${SCRIPT_DIR}/prop cd ${SCRIPT_DIR}/prop
-wget -c ${GFX_DRV}
-wget -c ${GFX_LIB}
-cp -f ${SCRIPT_DIR}/prop/*.tar.bz2 ./
 
 ninja fetch-domd
 git -C yocto/meta-xt-prod-devel-rcar-gen4 reset --hard
