@@ -64,8 +64,9 @@ EOS
 ARCH=arm64 CROSS_COMPILE=aarch64-linux-gnu- make ${DEFCONFIG} all -j$(nproc)
 CONFIG_DOMD_UBOOT_PATH="${WORK_DIR}/u-boot/u-boot.bin"
 
-ls $CONFIG_DOMD_UBOOT_PATH
-ls $CONFIG_DOMD_DTB_PATH
+ls -l $CONFIG_DOMD_UBOOT_PATH
+ls -l $(readlink -f $CONFIG_DOMD_DTB_PATH)
+DOMAIN_DTB_FILE_SIZE=$(ls -l `readlink -f $CONFIG_DOMD_DTB_PATH` | awk '{print $5}')
 
 # Dom0 Zephyr
 cd $WORK_DIR
@@ -91,6 +92,8 @@ west build -b ${BOARD} -p always  -S xen_dom0 ../ -- \
     -DCONFIG_DOMD_ENABLE=y \
     -DCONFIG_DOMD_UBOOT_PATH=\"$CONFIG_DOMD_UBOOT_PATH\" \
     -DCONFIG_DOMD_DTB_PATH=\"$CONFIG_DOMD_DTB_PATH\" \
+    -DCONFIG_PARTIAL_DEVICE_TREE_SIZE=${DOMAIN_DTB_FILE_SIZE} \
+    -DCONFIG_HEAP_MEM_POOL_SIZE=$((16384 +  ${DOMAIN_DTB_FILE_SIZE} )) \
 
 cp -f build/zephyr/zephyr.bin /tftp/zephyr.bin
 
