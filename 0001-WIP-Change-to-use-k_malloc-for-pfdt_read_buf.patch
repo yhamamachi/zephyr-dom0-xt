@@ -1,0 +1,63 @@
+From 71480da2b85c2301d69ddab06ae6ad838e57d7cd Mon Sep 17 00:00:00 2001
+From: Yuya Hamamachi <yuya.hamamachi.sx@renesas.com>
+Date: Thu, 10 Apr 2025 18:51:55 +0900
+Subject: [PATCH] WIP: Change to use k_malloc for pfdt_read_buf
+
+This reduces binary size.
+
+Signed-off-by: Yuya Hamamachi <yuya.hamamachi.sx@renesas.com>
+---
+ xen-shell-cmd/src/xen_cmds.c | 12 +++++++++++-
+ 1 file changed, 11 insertions(+), 1 deletion(-)
+
+diff --git a/xen-shell-cmd/src/xen_cmds.c b/xen-shell-cmd/src/xen_cmds.c
+index fc9b390..0e6dc1a 100644
+--- a/xen-shell-cmd/src/xen_cmds.c
++++ b/xen-shell-cmd/src/xen_cmds.c
+@@ -23,12 +23,19 @@ static struct xen_domain_cfg domcfg_tmp;
+ 
+ #if defined(CONFIG_XEN_DOMCFG_READ_PDT)
+ 
+-static uint8_t pfdt_read_buf[CONFIG_PARTIAL_DEVICE_TREE_SIZE] __aligned(8);
++// static uint8_t pfdt_read_buf[CONFIG_PARTIAL_DEVICE_TREE_SIZE] __aligned(8);
+ 
+ static int xen_cmd_read_pfdt(struct xen_domain_cfg *domcfg)
+ {
+ 	size_t pfdt_size;
+ 	int ret;
++	static uint8_t *pfdt_read_buf;
++
++	pfdt_read_buf = k_malloc(CONFIG_PARTIAL_DEVICE_TREE_SIZE);
++	if (pfdt_read_buf == NULL) {
++		LOG_ERR("k_malloc is failed to allocate mem for pfdt_read_buf");
++		return -ENOEXEC;
++	}
+ 
+ 	if (domcfg->dtb_start && domcfg->dtb_end) {
+ 		return 0;
+@@ -54,12 +61,14 @@ static int xen_cmd_read_pfdt(struct xen_domain_cfg *domcfg)
+ 
+ 	if (pfdt_size > sizeof(pfdt_read_buf)) {
+ 		LOG_ERR("PDT size is too big %zd", pfdt_size);
++		k_free(pfdt_read_buf);
+ 		return -EFBIG;
+ 	}
+ 
+ 	ret = domcfg->image_dt_read(pfdt_read_buf, pfdt_size, 0, domcfg->image_info);
+ 	if (ret) {
+ 		LOG_ERR("PDT read failed (%d)", ret);
++		k_free(pfdt_read_buf);
+ 		return ret;
+ 	}
+ 
+@@ -67,6 +76,7 @@ static int xen_cmd_read_pfdt(struct xen_domain_cfg *domcfg)
+ 
+ 	domcfg->dtb_start = pfdt_read_buf;
+ 	domcfg->dtb_end = pfdt_read_buf + pfdt_size;
++	k_free(pfdt_read_buf);
+ 
+ 	return 0;
+ }
+-- 
+2.34.1
+

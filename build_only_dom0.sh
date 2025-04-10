@@ -51,6 +51,8 @@ west update -n
 git -C $WORK_DIR/zephyr am $SCRIPT_DIR/0001-WIP-Add-initial-support-Whitehawk-CA76.patch
 # Fix build error using xenvm_gicv3
 sed -i zephyr/drivers/xen/regions.c -e "s/> EXTENDED_REGIONS_IDX/>= EXTENDED_REGIONS_IDX/"
+# Apply k_malloc patch for devicetree memory
+git -C $WORK_DIR/zephyr am $SCRIPT_DIR/0001-WIP-Change-to-use-k_malloc-for-pfdt_read_buf.patch
 
 west build -b ${BOARD} -p always  -S xen_dom0 ../ --
 

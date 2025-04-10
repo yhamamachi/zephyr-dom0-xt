@@ -76,6 +76,8 @@ west update -n
 git -C $WORK_DIR/zephyr am $SCRIPT_DIR/0001-WIP-Add-initial-support-Whitehawk-CA76.patch
 # Fix build error using xenvm_gicv3
 sed -i zephyr/drivers/xen/regions.c -e "s/> EXTENDED_REGIONS_IDX/>= EXTENDED_REGIONS_IDX/"
+# Apply k_malloc patch for devicetree memory
+git -C $WORK_DIR/zephyr-xenlib am $SCRIPT_DIR/0001-WIP-Change-to-use-k_malloc-for-pfdt_read_buf.patch
 
 # Xen-4.20 has XEN_DOMCTL_INTERFACE_VERSION=0x00000018, but Kconfig range is 0x15 to 0x17
 sed -i ${WORK_DIR}/zephyr/arch/arm64/core/xen/Kconfig -e 's/0x17/0x18/'
