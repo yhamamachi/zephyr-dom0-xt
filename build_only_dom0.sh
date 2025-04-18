@@ -1,6 +1,6 @@
 #!/bin/bash
 
-BOARD_LIST=("spider" "whitehawk")
+BOARD_LIST=("spider" "whitehawk" "h3ulcb")
 BOARD="dummy"
 SCRIPT_DIR=$(cd `dirname $0` && pwd)
 ZEPHYR_VERSION=0.16.0
@@ -19,6 +19,8 @@ for arg in $@; do
         BOARD="rcar_spider_ca55"
     elif [[ "${arg}" == "whitehawk" ]]; then
         BOARD="rcar_whitehawk_ca76"
+    elif [[ "${arg}" == "h3ulcb" ]]; then
+        BOARD="rcar_h3ulcb_ca57"
     fi
 done
 if [[ "$BOARD" == "dummy" ]]; then
