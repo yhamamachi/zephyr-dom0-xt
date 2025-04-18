@@ -1,6 +1,6 @@
 #!/bin/bash
 
-BOARD_LIST=("spider" "whitehawk")
+BOARD_LIST=("spider" "whitehawk" "h3ulcb")
 BOARD="dummy"
 SCRIPT_DIR=$(cd `dirname $0` && pwd)
 ZEPHYR_VERSION=0.16.0
@@ -19,6 +19,8 @@ for arg in $@; do
         BOARD="rcar_spider_ca55"
     elif [[ "${arg}" == "whitehawk" ]]; then
         BOARD="rcar_whitehawk_ca76"
+    elif [[ "${arg}" == "h3ulcb" ]]; then
+        BOARD="rcar_h3ulcb_ca57"
     fi
 done
 if [[ "$BOARD" == "dummy" ]]; then
@@ -53,7 +55,11 @@ git -C $WORK_DIR/zephyr am $SCRIPT_DIR/0001-WIP-Add-initial-support-Whitehawk-CA
 sed -i zephyr/drivers/xen/regions.c -e "s/> EXTENDED_REGIONS_IDX/>= EXTENDED_REGIONS_IDX/"
 
 # Build DomU Zephyr(w/o hardware/device driver domain)
-west build -b xenvm_gicv3 -p always zephyr/samples/synchronization
+if [[ "${BOARD}" == "rcar_h3ulcb_ca57" ]]; then
+    west build -b xenvm -p always zephyr/samples/synchronization
+else
+    west build -b xenvm_gicv3 -p always zephyr/samples/synchronization
+fi
 cp -f build/zephyr/zephyr.bin ./zephyr_sync.bin
 dtc -I dts -O dtb build/zephyr/zephyr.dts -o ./zephyr_sync.dtb
 CONFIG_DOMU_ZEPHYR_PATH="$WORK_DIR/zephyr_sync.bin"
