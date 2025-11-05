@@ -10,15 +10,19 @@ manifest:
       url-base: https://github.com/xen-troops/
     - name: zephyrproject-rtos
       url-base: https://github.com/zephyrproject-rtos/
+    - name: yhamamachi
+      url-base: https://github.com/yhamamachi/
+    - name: soburi
+      url-base: https://github.com/soburi/
 
   projects:
     - name: zephyr
-      remote: xentroops
-      revision: zephyr-v3.6.0-xt
+      remote: yhamamachi
+      revision: v4.2-branch-sh
       west-commands: scripts/west-commands.yml
     - name: zephyr-xenlib
-      remote: xentroops
-      revision: main
+      remote: soburi
+      revision: integrate-to-zephyr-repo
     - name: fatfs
       remote: zephyrproject-rtos
       revision: 427159bf95ea49b7680facffaa29ad506b42709b
