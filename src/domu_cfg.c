@@ -6,6 +6,7 @@
 
 #include <domain.h>
 #include <zephyr/xen/public/domctl.h>
+#include <zephyr/xen/public/arch-arm.h>
 
 #include <string.h>
 
@@ -33,7 +34,7 @@ static ssize_t get_domu_image_size(void *image_info, uint64_t *size)
 	return 0;
 }
 
-static struct xen_domain_cfg domu_cfg_0 = {
+static struct xen_domain_cfg domu_cfg = {
 	.name = "domu_default",
 	.mem_kb = 16384,
 
@@ -56,7 +57,7 @@ static struct xen_domain_cfg domu_cfg_0 = {
 
 struct dom0_domain_cfg domain_cfgs[] = {
 	{
-		.domain_cfg = &domu_cfg_0,
+		.domain_cfg = &domu_cfg,
 	},
 	{ 0 },
 };
