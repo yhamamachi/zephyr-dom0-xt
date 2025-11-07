@@ -1,0 +1,81 @@
+/dts-v1/;
+
+/ {
+	description = "Linux kernel and FDT blob for r8a779g3-sparrow-hawk";
+
+	images {
+		kernel-1 {
+			description = "Dom0 Zephyr";
+			data = /incbin/("./_work/build/zephyr/zephyr.bin");
+			arch = "arm64";
+			type = "firmware";
+			compression = "none";
+			load = <0x50200000>;
+			hash-1 {
+				algo = "crc32";
+			};
+		};
+		fdt-1 {
+			description = "Flattened Device Tree blob";
+			data = /incbin/("./prebuilt/r8a779g3-sparrow-hawk-xen.dtb");
+			type = "flat_dt";
+			arch = "arm64";
+			compression = "none";
+			load = <0x48000000>;
+			hash-1 {
+				algo = "crc32";
+			};
+		};
+		atf-1 {
+			description = "ARM Trusted Firmware";
+			data = /incbin/("./_work/zephyr/bl31-sparrow-hawk.bin");
+			type = "tfa-bl31";
+			arch = "arm64";
+			os = "arm-trusted-firmware";
+			compression = "none";
+			load = <0x46400000>;
+			entry = <0x46400000>;
+			hash-1 {
+				algo = "crc32";
+			};
+		};
+		xen {
+			description = "Xen image";
+			data = /incbin/("./prebuilt/xen-sparrow-hawk");
+			type = "kernel";
+			arch = "arm64";
+			os = "linux";
+			compression = "none";
+			load = <0x48200000>;
+			entry = <0x48200000>;
+			hash-1 {
+				algo = "crc32";
+			};
+		};
+		xen_policy {
+			description = "Xen policy";
+			data = /incbin/("./prebuilt/xenpolicy-sparrow-hawk");
+			type = "firmware";
+			arch = "arm64";
+			compression = "none";
+			load = <0x48070000>;
+			hash-1 {
+				algo = "crc32";
+			};
+		};
+	};
+
+	configurations {
+		default = "default";
+		default {
+			description = "Boot Xen with Dom0 Zephyr";
+			kernel = "xen";
+			fdt = "fdt-1";
+			loadables = "atf-1", "xen_policy", "kernel-1";
+			hash-1 {
+				algo = "crc32";
+			};
+		};
+	};
+};
+
