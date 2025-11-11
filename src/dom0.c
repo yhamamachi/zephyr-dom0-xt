@@ -42,7 +42,6 @@ struct xen_domain_cfg *domain_get_user_cfg(int index)
 
 int main(void)
 {
-	int ret;
 	int i = 0;
         LOG_INF("dom0.c: main function: start");
 /*
@@ -69,7 +68,6 @@ int main(void)
 #ifdef CONFIG_DOMU_ENABLE
         domain_create(&domu_cfg, 1);
 #endif
-exit_err:
         LOG_INF("dom0.c: main function: end");
-	return ret;
+	return 0;
 }
