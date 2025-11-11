@@ -16,7 +16,10 @@ west init -o--depth=1 -m https://github.com/yhamamachi/zephyr-dom0-xt.git --mr s
 west update -n
 west zephyr-export
 west packages pip --install
-west sdk install --toolchain aarch64-zephyr-elf
+ZEPHYR_SDK_VER=0.17.4
+if [[ ! -e "${HOME}/zephyr-sdk-${ZEPHYR_SDK_VER}/aarch64-zephyr-elf" ]]; then
+    west sdk install --toolchain aarch64-zephyr-elf
+fi
 
 git -C $WORK_DIR/zephyr-dom0-xt pull
 
