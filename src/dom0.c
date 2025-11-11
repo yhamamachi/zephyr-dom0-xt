@@ -66,8 +66,9 @@ int main(void)
         domain_create(&domd_cfg, 1);
 #endif
 #ifdef CONFIG_DOMU_ENABLE
-        domain_create(&domu_cfg, 1);
+        //domain_create(&domu_cfg, 1);
 #endif
         LOG_INF("dom0.c: main function: end");
+        printf("Hello from Dom0\n");
 	return 0;
 }
