@@ -51,7 +51,7 @@
 	 * Xen passes actual values for setup in domain device tree, but Zephyr
 	 * is not capable to parse and handle it in runtime.
 	 */
-	hypervisor: hypervisor@78080000 {
+	hypervisor: hypervisor@48200000 {
 		compatible = "xen,xen";
 		reg = <0x0 0x48200000 0x0 0x40000 0x0 0xc000000 0x0 0x23e00000>;
 		interrupts = <GIC_PPI 0x0 IRQ_TYPE_EDGE IRQ_DEFAULT_PRIORITY>;
