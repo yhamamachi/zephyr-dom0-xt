@@ -18,7 +18,7 @@ manifest:
   projects:
     - name: zephyr
       remote: yhamamachi
-      revision: v4.2-branch-sh
+      revision: v4.3.0-sh
       west-commands: scripts/west-commands.yml
     - name: zephyr-xenlib
       remote: soburi
